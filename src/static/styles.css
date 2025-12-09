@@ -90,10 +90,26 @@ section h3 {
   color: #555;
 }
 
-.participants-section em {
-  color: #999;
-  font-style: italic;
-}
+
+  .participants-list {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .participant-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .delete-participant {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #c00;
+    font-size: 1.2em;
+    margin-left: 8px;
+  }
 
 .form-group {
   margin-bottom: 15px;

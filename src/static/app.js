@@ -19,9 +19,19 @@ document.addEventListener("DOMContentLoaded", () => {
         activityCard.className = "activity-card";
 
         const spotsLeft = details.max_participants - details.participants.length;
-        const participantsList = details.participants.length > 0
-          ? `<ul>${details.participants.map(p => `<li>${p}</li>`).join("")}</ul>`
-          : "<p><em>No participants yet</em></p>";
+
+        // Crear lista de participantes sin viñetas y con icono de eliminar
+        let participantsList = "<p><em>No participants yet</em></p>";
+        if (details.participants.length > 0) {
+          participantsList = `<div class="participants-list" style="list-style:none; padding-left:0;">` +
+            details.participants.map(p => `
+              <span class="participant-item" style="display:flex;align-items:center;margin-bottom:4px;">
+                <span style="flex:1;">${p}</span>
+                <button class="delete-participant" title="Remove" data-activity="${name}" data-email="${p}" style="background:none;border:none;cursor:pointer;color:#c00;font-size:1.2em;margin-left:8px;">&#128465;</button>
+              </span>
+            `).join("") +
+            `</div>`;
+        }
 
         activityCard.innerHTML = `
           <h4>${name}</h4>
@@ -41,6 +51,36 @@ document.addEventListener("DOMContentLoaded", () => {
         option.value = name;
         option.textContent = name;
         activitySelect.appendChild(option);
+      });
+
+      // Asignar eventos a los botones de eliminar
+      document.querySelectorAll('.delete-participant').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const activity = btn.getAttribute('data-activity');
+          const email = btn.getAttribute('data-email');
+          if (confirm(`¿Eliminar a ${email} de ${activity}?`)) {
+            try {
+              const response = await fetch(`/activities/${encodeURIComponent(activity)}/participant?email=${encodeURIComponent(email)}`, {
+                method: 'DELETE'
+              });
+              const result = await response.json();
+              if (response.ok) {
+                messageDiv.textContent = result.message;
+                messageDiv.className = "success";
+                fetchActivities(); // Recargar actividades
+              } else {
+                messageDiv.textContent = result.detail || "Error removing participant";
+                messageDiv.className = "error";
+              }
+              messageDiv.classList.remove("hidden");
+              setTimeout(() => { messageDiv.classList.add("hidden"); }, 5000);
+            } catch (error) {
+              messageDiv.textContent = "Failed to remove participant.";
+              messageDiv.className = "error";
+              messageDiv.classList.remove("hidden");
+            }
+          }
+        });
       });
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
@@ -69,6 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        fetchActivities(); // Actualizar actividades tras registro
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
